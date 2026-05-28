@@ -29,7 +29,7 @@
 </head>
 <body class="text-zinc-800 font-sans flex antialiased">
 
-    <!-- 1. 登录面板 (米黄色拟物卡片) -->
+    <!-- 1. 登录面板 (奶油之家深度视觉美化重构) -->
     <div id="admin-login-view" class="fixed inset-0 bg-[#f7f9fb] flex items-center justify-center z-50 overflow-y-auto">
         <div class="max-w-md w-full mx-4 bg-white p-8 rounded-2xl border border-zinc-100 shadow-xl space-y-6">
             <div class="text-center">
@@ -48,11 +48,14 @@
         </div>
     </div>
 
-    <!-- 2. 控制台 (已解锁，左右分栏) -->
-    <div id="admin-main-view" class="hidden w-full h-full flex overflow-hidden">
+    <!-- 2. 控制台 (已解锁，豪华响应式分栏) -->
+    <div id="admin-main-view" class="hidden w-full h-full flex relative overflow-hidden">
         
-        <!-- 左侧导航侧边栏 -->
-        <aside class="w-64 bg-slate-900 text-slate-200 flex flex-col justify-between p-6 shrink-0 h-full">
+        <!-- 【移动端磨砂背景遮罩层】：点击即可自动滑回侧边栏 -->
+        <div id="sidebar-overlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 hidden transition-all duration-300"></div>
+        
+        <!-- 左侧导航侧边栏 (已深度优化为：大屏静态，手机端抽屉式滑出) -->
+        <aside class="fixed md:static inset-y-0 left-0 w-64 bg-slate-900 text-slate-200 flex flex-col justify-between p-6 shrink-0 h-full z-50 -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
             <div class="space-y-6">
                 <!-- 头部品牌 (D1 动态绑定) -->
                 <div class="flex flex-col border-b border-slate-800 pb-5">
@@ -92,195 +95,222 @@
             </div>
         </aside>
 
-        <!-- 右侧主工作区 (自适应滚动，内部配备 7xl 宽幅居中容器) -->
-        <main class="flex-grow p-8 overflow-y-auto h-full">
-            <div class="max-w-7xl mx-auto w-full space-y-8 pb-12">
+        <!-- 右侧主工作区 (自适应滚动) -->
+        <main class="flex-grow flex flex-col overflow-hidden h-full">
+            
+            <!-- 【手机端小顶栏】：仅在手机端显示，包含呼出侧边栏的极简汉堡按钮 -->
+            <div class="flex items-center justify-between bg-white border-b border-zinc-100 p-4 md:hidden shrink-0">
+                <button onclick="toggleMobileSidebar()" class="text-zinc-600 hover:text-zinc-900 p-1 rounded hover:bg-zinc-50 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <span id="mobile-brand-title" class="text-sm font-bold text-zinc-900">奶油控制台</span>
+                <div class="w-8 h-8 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-xs">👤</div>
+            </div>
 
-                <!-- 面板 A：文章列表管理 -->
-                <div id="panel-posts" class="admin-panel-content space-y-6">
-                    <div class="border-b border-zinc-100 pb-3">
-                        <h2 class="text-xl font-bold text-zinc-900 tracking-tight">文章列表管理</h2>
-                        <p class="text-xs text-zinc-400 mt-1">管理、修改、删除和一键筛选已发布的文章</p>
-                    </div>
+            <!-- 内容滚动窗口 -->
+            <div class="flex-grow p-4 sm:p-6 lg:p-8 overflow-y-auto h-full">
+                <div class="max-w-7xl mx-auto w-full space-y-8 pb-12">
 
-                    <!-- 组合筛选条 -->
-                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-white p-4 rounded-xl border border-zinc-100 shadow-sm">
-                        <div>
-                            <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">🔍 标题检索</label>
-                            <input type="text" id="admin-filter-q" oninput="filterAdminTable()" class="w-full border border-zinc-200 rounded-lg px-3 py-1.5 text-xs focus:outline-indigo-500 bg-white" placeholder="检索标题关键词...">
+                    <!-- 面板 A：文章列表管理 -->
+                    <div id="panel-posts" class="admin-panel-content space-y-6">
+                        <div class="border-b border-zinc-100 pb-3">
+                            <h2 class="text-xl font-bold text-zinc-900 tracking-tight">文章列表管理</h2>
+                            <p class="text-xs text-zinc-400 mt-1">管理、修改、删除和一键筛选已发布的文章</p>
                         </div>
-                        <div>
-                            <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">📂 筛选大系列</label>
-                            <select id="admin-filter-series" onchange="filterAdminTable()" class="w-full border border-zinc-200 rounded-lg px-3 py-1.5 text-xs focus:outline-indigo-500 bg-white bg-white"></select>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">🏷️ 筛选子分类</label>
-                            <select id="admin-filter-category" onchange="filterAdminTable()" class="w-full border border-zinc-200 rounded-lg px-3 py-1.5 text-xs focus:outline-indigo-500 bg-white"></select>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">🔒 筛选发布状态</label>
-                            <select id="admin-filter-status" onchange="filterAdminTable()" class="w-full border border-zinc-200 rounded-lg px-3 py-1.5 text-xs focus:outline-indigo-500 bg-white">
-                                <option value="">全部状态</option>
-                                <option value="publish">公开 (Publish)</option>
-                                <option value="draft">隐藏 (Draft)</option>
-                            </select>
-                        </div>
-                    </div>
 
-                    <!-- 数据表格 -->
-                    <div class="bg-white rounded-xl border border-zinc-100 shadow-sm overflow-hidden">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-sm text-zinc-600">
-                                <thead>
-                                    <tr class="bg-zinc-50 border-b border-zinc-100 text-[11px] font-bold uppercase tracking-wider text-zinc-400">
-                                        <th class="px-6 py-3.5">文章标题</th>
-                                        <th class="px-6 py-3.5">所属系列 ➔ 子分类</th>
-                                        <th class="px-6 py-3.5">权重 ➔ 浏览 ➔ 状态</th>
-                                        <th class="px-6 py-3.5 text-right">操作</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="admin-posts-table" class="divide-y divide-zinc-100"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 面板 B：撰写文章 -->
-                <div id="panel-editor" class="admin-panel-content space-y-6 hidden">
-                    <div class="border-b border-zinc-100 pb-3">
-                        <h2 id="editor-title" class="text-xl font-bold text-zinc-900 tracking-tight">撰写新教程</h2>
-                        <p class="text-xs text-zinc-400 mt-1">使用 Vditor 所见即所得编辑器进行长文排版创作</p>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-xl border border-zinc-200/60 shadow-sm space-y-5 relative">
-                        <!-- 第一行：唯一 ID 与 标题 -->
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <!-- 组合筛选条 -->
+                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-white p-4 rounded-xl border border-zinc-100 shadow-sm">
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">唯一 ID (不可修改)</label>
-                                <input type="text" id="admin-id" class="w-full border border-zinc-200 rounded-lg px-3.5 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all" placeholder="例如: advanced-markdown">
-                            </div>
-                            <div class="sm:col-span-3">
-                                <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">文章标题</label>
-                                <input type="text" id="admin-title" class="w-full border border-zinc-200 rounded-lg px-3.5 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all" placeholder="请输入文章主标题">
-                            </div>
-                        </div>
-
-                        <!-- 第二行：一二级分类、状态与物理权重排版 -->
-                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">所属大系列导航</label>
-                                <select id="admin-series" class="w-full border border-zinc-200 rounded-lg px-3.5 h-10 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none bg-white"></select>
+                                <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">🔍 标题检索</label>
+                                <input type="text" id="admin-filter-q" oninput="filterAdminTable()" class="w-full border border-zinc-200 rounded-lg px-3 py-1.5 text-xs focus:outline-indigo-500 bg-white" placeholder="检索标题关键词...">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">二级子分类选择</label>
-                                <select id="admin-category" class="w-full border border-zinc-200 rounded-lg px-3.5 h-10 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none bg-white"></select>
+                                <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">📂 筛选大系列</label>
+                                <select id="admin-filter-series" onchange="filterAdminTable()" class="w-full border border-zinc-200 rounded-lg px-3 py-1.5 text-xs focus:outline-indigo-500 bg-white bg-white"></select>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">排序权重 (数字越大越靠前)</label>
-                                <input type="number" id="admin-weight" class="w-full border border-zinc-200 rounded-lg px-3.5 h-10 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all" value="0">
+                                <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">🏷️ 筛选子分类</label>
+                                <select id="admin-filter-category" onchange="filterAdminTable()" class="w-full border border-zinc-200 rounded-lg px-3 py-1.5 text-xs focus:outline-indigo-500 bg-white"></select>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">发布显示状态</label>
-                                <select id="admin-status" class="w-full border border-zinc-200 rounded-lg px-3.5 h-10 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none bg-white">
-                                    <option value="publish">🟢 公开发布 (Publish)</option>
-                                    <option value="draft">🔴 隐藏草稿 (Draft - 仅供秘密链接预览)</option>
+                                <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">🔒 筛选发布状态</label>
+                                <select id="admin-filter-status" onchange="filterAdminTable()" class="w-full border border-zinc-200 rounded-lg px-3 py-1.5 text-xs focus:outline-indigo-500 bg-white">
+                                    <option value="">全部状态</option>
+                                    <option value="publish">公开 (Publish)</option>
+                                    <option value="draft">隐藏 (Draft)</option>
                                 </select>
                             </div>
                         </div>
 
-                        <!-- 第三行：摘要与特色封面 -->
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div class="sm:col-span-2">
-                                <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">文章摘要说明</label>
-                                <input type="text" id="admin-summary" class="w-full border border-zinc-200 rounded-lg px-3.5 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all" placeholder="请输入文章摘要">
+                        <!-- 数据表格 -->
+                        <div class="bg-white rounded-xl border border-zinc-100 shadow-sm overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm text-zinc-600">
+                                    <thead>
+                                        <tr class="bg-zinc-50 border-b border-zinc-100 text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+                                            <th class="px-6 py-3.5">文章标题</th>
+                                            <th class="px-6 py-3.5">所属系列 ➔ 子分类</th>
+                                            <th class="px-6 py-3.5">权重 ➔ 浏览 ➔ 状态</th>
+                                            <th class="px-6 py-3.5 text-right">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-posts-table" class="divide-y divide-zinc-100"></tbody>
+                                </table>
                             </div>
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">首页特色封面图 URL</label>
-                                <div class="flex gap-2">
-                                    <input type="text" id="admin-cover" class="flex-grow border border-zinc-200 rounded-lg px-3.5 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all" placeholder="https://images.blogs.nyc.mn/xxx.png">
-                                    <button onclick="triggerCoverUpload()" class="bg-zinc-800 hover:bg-zinc-900 text-white text-xs px-4 rounded-lg font-bold transition-all shrink-0">上传</button>
+                        </div>
+                    </div>
+
+                    <!-- 面板 B：撰写文章 -->
+                    <div id="panel-editor" class="admin-panel-content space-y-6 hidden">
+                        <div class="border-b border-zinc-100 pb-3">
+                            <h2 id="editor-title" class="text-xl font-bold text-zinc-900 tracking-tight">撰写新教程</h2>
+                            <p class="text-xs text-zinc-400 mt-1">使用 Vditor 所见即所得编辑器进行长文排版创作</p>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-xl border border-zinc-200/60 shadow-sm space-y-5 relative">
+                            <!-- 第一行 -->
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">唯一 ID (不可修改)</label>
+                                    <input type="text" id="admin-id" class="w-full border border-zinc-200 rounded-lg px-3.5 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all" placeholder="例如: advanced-markdown">
                                 </div>
-                                <input type="file" id="cover-file-input" accept="image/*" class="hidden" onchange="handleCoverFileSelected()">
+                                <div class="sm:col-span-3">
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">文章标题</label>
+                                    <input type="text" id="admin-title" class="w-full border border-zinc-200 rounded-lg px-3.5 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all" placeholder="请输入文章主标题">
+                                </div>
+                            </div>
+
+                            <!-- 第二行 -->
+                            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">所属大系列导航</label>
+                                    <select id="admin-series" class="w-full border border-zinc-200 rounded-lg px-3.5 h-10 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none bg-white"></select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">二级子分类选择</label>
+                                    <select id="admin-category" class="w-full border border-zinc-200 rounded-lg px-3.5 h-10 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none bg-white"></select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">排序权重 (数字越大越靠前)</label>
+                                    <input type="number" id="admin-weight" class="w-full border border-zinc-200 rounded-lg px-3.5 h-10 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all" value="0">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">发布显示状态</label>
+                                    <select id="admin-status" class="w-full border border-zinc-200 rounded-lg px-3.5 h-10 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none bg-white">
+                                        <option value="publish">🟢 公开发布 (Publish)</option>
+                                        <option value="draft">🔴 隐藏草稿 (Draft - 仅供秘密链接预览)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- 第三行 -->
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div class="sm:col-span-2">
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">文章摘要说明</label>
+                                    <input type="text" id="admin-summary" class="w-full border border-zinc-200 rounded-lg px-3.5 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all" placeholder="请输入文章摘要">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">首页特色封面图 URL</label>
+                                    <div class="flex gap-2">
+                                        <input type="text" id="admin-cover" class="flex-grow border border-zinc-200 rounded-lg px-3.5 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all" placeholder="https://images.blogs.nyc.mn/xxx.png">
+                                        <button onclick="triggerCoverUpload()" class="bg-zinc-800 hover:bg-zinc-900 text-white text-xs px-4 rounded-lg font-bold transition-all shrink-0">上传</button>
+                                    </div>
+                                    <input type="file" id="cover-file-input" accept="image/*" class="hidden" onchange="handleCoverFileSelected()">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">正文编辑器</label>
+                                <div id="vditor-container" class="w-full"></div>
+                            </div>
+                            
+                            <!-- 悬浮固底操作栏 -->
+                            <div class="sticky bottom-0 bg-white/95 backdrop-blur-sm py-4 border-t border-zinc-100 z-40 flex justify-end gap-3">
+                                <button onclick="cancelEdit()" class="border border-zinc-200 hover:bg-zinc-50 text-zinc-600 px-5 py-2 rounded-lg text-sm font-medium transition-colors">
+                                    取消重置
+                                </button>
+                                <button onclick="publishPost()" id="publish-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm">
+                                    直接发布（瞬间生效）
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 面板 C：全局配置管理 -->
+                    <div id="panel-config" class="admin-panel-content space-y-6 hidden">
+                        <div class="border-b border-zinc-100 pb-3">
+                            <h2 class="text-xl font-bold text-zinc-900 tracking-tight">自定义站点全局配置与大系列文案</h2>
+                            <p class="text-xs text-zinc-400 mt-1">在线管理您的一二级目导航、网站名、右上角工具外链及全局排版</p>
+                        </div>
+
+                        <!-- 分区 1 -->
+                        <div class="bg-white p-6 rounded-xl border border-zinc-100 shadow-sm space-y-4">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-600 border-b border-zinc-50 pb-2 flex items-center gap-1.5">
+                                <span>📝</span> 站点基础文本与显示
+                            </h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-zinc-500 mb-1.5">网站主标题（Title）</label>
+                                    <input type="text" id="config-title" class="w-full border border-zinc-200 rounded-lg px-3.5 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all">
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="block text-xs font-semibold text-zinc-500 mb-1.5">副标题 / 描述说明（Slogan）</label>
+                                    <input type="text" id="config-subtitle" class="w-full border border-zinc-200 rounded-lg px-3.5 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all">
+                                </div>
                             </div>
                         </div>
 
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">正文编辑器</label>
-                            <div id="vditor-container" class="w-full"></div>
-                        </div>
-                        
-                        <!-- 悬浮固底操作栏 -->
-                        <div class="sticky bottom-0 bg-white/95 backdrop-blur-sm py-4 border-t border-zinc-100 z-40 flex justify-end gap-3">
-                            <button onclick="cancelEdit()" class="border border-zinc-200 hover:bg-zinc-50 text-zinc-600 px-5 py-2 rounded-lg text-sm font-medium transition-colors">
-                                取消重置
-                            </button>
-                            <button onclick="publishPost()" id="publish-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm">
-                                直接发布（瞬间生效）
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 面板 C：全局配置管理 (全新线性单列大改版：一行一个操作，极致规整清晰) -->
-                <div id="panel-config" class="admin-panel-content space-y-6 hidden">
-                    <div class="border-b border-zinc-100 pb-3">
-                        <h2 class="text-xl font-bold text-zinc-900 tracking-tight">自定义站点全局配置与大系列文案</h2>
-                        <p class="text-xs text-zinc-400 mt-1">在线管理您的一二级目导航、网站名、右上角工具外链及全局排版</p>
-                    </div>
-
-                    <div class="bg-white p-8 rounded-xl border border-zinc-100 shadow-sm space-y-6">
-                        <!-- 1. 网站主标题 -->
-                        <div class="space-y-1.5">
-                            <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400">网站主标题（Title）</label>
-                            <input type="text" id="config-title" class="w-full border border-zinc-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 focus:outline-none transition-all">
-                        </div>
-
-                        <!-- 2. 副标题 / Slogan -->
-                        <div class="space-y-1.5">
-                            <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400">副标题 / 描述说明（Slogan）</label>
-                            <input type="text" id="config-subtitle" class="w-full border border-zinc-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 focus:outline-none transition-all">
-                        </div>
-
-                        <!-- 3. 全局大系列导航 -->
-                        <div class="space-y-1.5">
-                            <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400">全局大系列导航栏列表（用英文逗号隔开）</label>
-                            <input type="text" id="config-series" class="w-full border border-zinc-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 focus:outline-none transition-all">
-                            <span class="text-[10px] text-zinc-400 block mt-1">示例：科学上网, 谷歌系列, NAS系列</span>
-                        </div>
-
-                        <!-- 4. 二级子分类标签 -->
-                        <div class="space-y-1.5">
-                            <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400">二级子分类标签列表（用英文逗号隔开）</label>
-                            <input type="text" id="config-categories" class="w-full border border-zinc-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 focus:outline-none transition-all">
-                            <span class="text-[10px] text-zinc-400 block mt-1">示例：技术, 教程, 随笔, 思考</span>
-                        </div>
-
-                        <!-- 5. 全局卡片排版模式 (已补回 HTML 以防读取报错导致站点标题失效) -->
-                        <div class="space-y-1.5">
-                            <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400">全局卡片排版模式</label>
-                            <select id="config-layout-mode" class="w-full border border-zinc-200 rounded-lg px-4 h-11 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 focus:outline-none transition-all bg-white">
-                                <option value="standard">图片 + 标题 + 摘要 (标准样式)</option>
-                                <option value="simple">图片 + 标题 (极简缩略样式)</option>
-                            </select>
-                        </div>
-
-                        <!-- 6. 右上方外链导航配置 (全款优雅排版) -->
-                        <div class="space-y-1.5">
-                            <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400">右上角外链导航 (格式: 名称, 链接，一行一个)</label>
-                            <textarea id="config-nav-links" rows="4" class="w-full border border-zinc-200 rounded-xl p-4 text-xs font-mono focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 focus:outline-none transition-all" placeholder="订阅转换, https://sub.blogs.nyc.mn&#10;IP查询, https://ip.blogs.nyc.mn"></textarea>
-                            <div class="bg-zinc-50 p-4 rounded-xl border border-zinc-100 text-[11px] text-zinc-400 leading-relaxed mt-1">
-                                <span class="font-bold text-zinc-500">💡 书写说明：</span>每一行代表一个链接，请使用 <strong>英文半角逗号</strong> <code class="bg-white px-1 py-0.5 rounded border border-zinc-200">,</code> 隔开名称和链接。
+                        <!-- 分区 2 -->
+                        <div class="bg-white p-6 rounded-xl border border-zinc-100 shadow-sm space-y-4">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-600 border-b border-zinc-50 pb-2 flex items-center gap-1.5">
+                                <span>📂</span> 分类体系与卡片排版控制
+                            </h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-zinc-500 mb-1.5">一级大系列导航栏（用英文逗号隔开）</label>
+                                    <input type="text" id="config-series" class="w-full border border-zinc-200 rounded-lg px-3.5 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-zinc-500 mb-1.5">二级子分类标签栏（用英文逗号隔开）</label>
+                                    <input type="text" id="config-categories" class="w-full border border-zinc-200 rounded-lg px-3.5 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-zinc-500 mb-1.5">全局卡片排版模式</label>
+                                    <select id="config-layout-mode" class="w-full border border-zinc-200 rounded-lg px-3.5 h-10 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none bg-white">
+                                        <option value="standard">图片 + 标题 + 摘要 (标准样式)</option>
+                                        <option value="simple">图片 + 标题 (极简缩略样式)</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="flex justify-end pt-4 border-t border-zinc-100">
-                            <button onclick="saveSiteConfig()" id="save-config-btn" class="bg-zinc-900 hover:bg-zinc-800 text-white px-6 py-2.5 rounded-lg text-xs font-semibold transition-all shadow-sm">
-                                保存更新（瞬间生效）
-                            </button>
+                        <!-- 分区 3 -->
+                        <div class="bg-white p-6 rounded-xl border border-zinc-100 shadow-sm space-y-4">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-600 border-b border-zinc-50 pb-2 flex items-center gap-1.5">
+                                <span>🔗</span> 右上方外链导航配置
+                            </h3>
+                            <div class="space-y-2">
+                                <label class="block text-xs font-semibold text-zinc-500">外链导航数据 (格式: 名称, 链接)</label>
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+                                    <textarea id="config-nav-links" rows="4" class="md:col-span-3 w-full border border-zinc-200 rounded-xl p-4 text-xs font-mono focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all" placeholder="订阅转换, https://sub.blogs.nyc.mn&#10;IP查询, https://ip.blogs.nyc.mn"></textarea>
+                                    <div class="md:col-span-1 bg-zinc-50 p-4 rounded-xl border border-zinc-100 space-y-2 text-[11px] text-zinc-400 leading-relaxed">
+                                        <p class="font-bold text-zinc-500">💡 书写说明：</p>
+                                        <p>1. 每行代表一个链接。</p>
+                                        <p>2. 请使用 **英文半角逗号** `,` 隔开名称和链接。</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-end pt-4 border-t border-zinc-100">
+                                <button onclick="saveSiteConfig()" id="save-config-btn" class="bg-zinc-900 hover:bg-zinc-800 text-white px-5 py-2 rounded-lg text-xs font-semibold transition-all shadow-sm">
+                                    更新配置（瞬间生效）
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
 
+                </div>
             </div>
         </main>
     </div>
@@ -304,6 +334,7 @@
         let activeSeriesList = [];       
         let dbNavMeta = {};              
         let isEditing = false;
+        let mobileSidebarOpen = false; // 缓存移动端侧边栏开启状态
 
         window.addEventListener('load', async () => {
             const password = getActivePassword();
@@ -318,6 +349,23 @@
                 document.getElementById('admin-main-view').classList.add('hidden');
             }
         });
+
+        // 【移动端自适应无缝交互】：处理移动端下侧边栏抽屉式滑入和滑回
+        function toggleMobileSidebar() {
+            const sidebar = document.querySelector('aside');
+            const overlay = document.getElementById('sidebar-overlay');
+            if (!sidebar || !overlay) return;
+
+            if (mobileSidebarOpen) {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+                mobileSidebarOpen = false;
+            } else {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+                mobileSidebarOpen = true;
+            }
+        }
 
         function switchTab(tabId) {
             document.querySelectorAll('.admin-panel-content').forEach(el => el.classList.add('hidden'));
@@ -337,6 +385,11 @@
             if (activeBtn) {
                 activeBtn.classList.remove('text-slate-300', 'hover:bg-slate-800', 'hover:text-white');
                 activeBtn.classList.add('bg-indigo-600', 'text-white');
+            }
+
+            // 【自适应优化】：在手机端选择某项菜单后，侧边栏在背景里自动轻柔滑回，无需手动收起
+            if (mobileSidebarOpen) {
+                toggleMobileSidebar();
             }
         }
 
@@ -376,7 +429,6 @@
             document.getElementById('admin-login-view').classList.remove('hidden');
         }
 
-        // 【黄金修复】：大系列、浏览器标题、登录卡片全部闭合，完美载入数据库设置的主题名！
         async function loadSiteConfig() {
             try {
                 const res = await fetch('./api/config?_t=' + Date.now());
@@ -389,7 +441,7 @@
                 const rawNavLinks = JSON.parse(data.site_nav_links || '[{"name": "订阅转换", "url": "https://sub.blogs.nyc.mn"}]');
                 globalLayoutMode = data.site_layout_mode || "standard";
 
-                // 【黄金修复】：动态更新后台网页的浏览器 TAB 栏标题，瞬间告别 blogs.nyc.mn 默认标签
+                // 【动态浏览器标题绑定】：自动拉取数据库中的标题配置，呈现极客化的 TAB 名
                 document.title = title + " - 后台控制面板";
 
                 const sidebarTitle = document.getElementById('sidebar-site-title');
@@ -667,7 +719,7 @@
                         </td>
                         <td class="px-6 py-3.5 text-right space-x-3">
                             <a href="./index.html#/post/${post.id}" target="_blank" class="text-emerald-600 hover:text-emerald-800 font-semibold text-xs transition-all">查看 ↗</a>
-                            <button onclick="editPost(${originalIndex})" class="text-indigo-600 hover:text-indigo-800 font-semibold text-xs transition-colors">编辑</button>
+                            <button onclick="editPost(${originalIndex})" class="text-indigo-600 hover:text-indigo-800 font-semibold text-xs transition-all">编辑</button>
                             <button onclick="deletePost('${post.id}')" class="text-red-600 hover:text-red-800 font-semibold text-xs transition-all">删除</button>
                         </td>
                     </tr>
