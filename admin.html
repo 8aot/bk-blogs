@@ -2,14 +2,16 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>blogs.nyc.mn - 数字花园</title>
-    <!-- Tailwind CSS 与 官方排版插件 -->
+    <!-- 【终极视口物理锁定】：maximum-scale=1.0, user-scalable=0 彻底禁止任何移动浏览器恶意自动放大 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>blogs.nyc.mn - 后台控制面板</title>
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
-    <!-- Highlight.js 代码高亮 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js"></script>
+    <!-- Vditor 视觉编辑器 -->
+    <link rel="stylesheet" href="https://unpkg.com/vditor/dist/index.css" />
+    <script src="https://unpkg.com/vditor/dist/index.min.js"></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -20,167 +22,420 @@
         }
     </script>
     <style>
-        html { scroll-behavior: smooth; }
-        body { background-color: #f7f9fb; }
-        .code-block-wrapper { position: relative; }
-        .copy-btn {
-            position: absolute; top: 10px; right: 10px;
-            background: rgba(255, 255, 255, 0.08); color: #9ca3af;
-            border: 1px solid rgba(156, 163, 175, 0.15); border-radius: 6px;
-            padding: 4px 10px; font-size: 11px; cursor: pointer; transition: all 0.2s;
-        }
-        .copy-btn:hover { background: rgba(255, 255, 255, 0.15); color: #fff; }
+        /* 【现代响应式滚动与视口锁定】：采用 100dvh 动态视口，完美适配手机底端导航栏与旋转变化 */
+        html, body { height: 100dvh; height: 100dvh; overflow: hidden; background-color: #f7f9fb; }
+        .vditor { border-color: #e2e8f0 !important; border-radius: 12px !important; }
+        .vditor-toolbar { border-bottom-color: #f1f5f9 !important; background-color: #fafafa !important; border-radius: 12px 12px 0 0 !important; }
+        .vditor-content { background: #fff !important; }
     </style>
 </head>
-<body class="text-zinc-800 min-h-screen flex flex-col antialiased">
+<body class="text-zinc-800 font-sans flex antialiased h-[100dvh]">
 
-    <!-- 顶栏 (深度重构自适应菜单栏，大系列在手机端或窗口缩小时自动换行，绝不隐藏) -->
-    <nav class="bg-white border-b border-zinc-100 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-16 py-3 md:py-0 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div class="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-8 w-full md:w-auto">
-                <!-- LOGO -->
-                <a href="#/" class="flex items-center space-x-2 shrink-0">
-                    <span class="w-3.5 h-3.5 bg-amber-500 rounded-full flex items-center justify-center animate-pulse"></span>
-                    <span id="nav-site-title" class="text-base font-bold tracking-tight text-zinc-900">blogs.nyc.mn</span>
-                </a>
-                
-                <!-- 【大系列导航栏】：支持手机端、窄屏下自动换行，保持完全可见 -->
-                <div id="series-navbar-container" class="flex flex-wrap gap-x-4 gap-y-2 text-xs font-bold text-zinc-500 uppercase tracking-wider">
+    <!-- 1. 登录面板 (奶油之家深度视觉美化重构 - 输入框已升级为 text-base / 16px 彻底防止 iOS 放大) -->
+    <div id="admin-login-view" class="fixed inset-0 bg-[#f7f9fb] flex items-center justify-center z-50 overflow-y-auto">
+        <div class="max-w-md w-full mx-4 bg-white p-8 rounded-2xl border border-zinc-100 shadow-xl space-y-6">
+            <div class="text-center">
+                <div class="w-14 h-14 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-500/20">
+                    <span class="text-2xl">👤</span>
                 </div>
+                <h2 class="text-xl font-bold tracking-tight text-zinc-900">Blogs 奶油管理后台</h2>
+                <p class="text-xs text-zinc-400 mt-1.5 leading-relaxed">请输入您在 D1 数据库中配置的管理密码解锁系统</p>
             </div>
-            
-            <div class="flex items-center space-x-6 shrink-0">
-                <!-- 动态右上角外链容器 -->
-                <div id="custom-navbar-links" class="hidden md:flex items-center space-x-6 text-xs font-semibold text-zinc-500"></div>
-                
-                <!-- 极简头像图标化后台入口 -->
-                <a href="./admin.html" class="text-zinc-300 hover:text-amber-500 transition-all p-1.5 rounded-full hover:bg-zinc-50 shrink-0" title="管理控制台">
-                    <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                    </svg>
-                </a>
+            <div class="space-y-4">
+                <!-- 【字号升级】：输入框采用 text-[16px] 苹果手机对焦绝对不触发恶意自动放大 -->
+                <input type="password" id="admin-pass" class="w-full border border-zinc-200 rounded-xl px-4 py-3 text-[16px] focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 focus:outline-none transition-all duration-300" placeholder="请输入您的密码 (默认: admin123)">
+                <button onclick="verifyAndLogin()" class="w-full bg-zinc-900 hover:bg-zinc-800 text-white py-3 rounded-xl text-sm font-semibold tracking-wide shadow-md hover:shadow-lg transition-all duration-300">
+                    确认解锁控制台
+                </button>
             </div>
         </div>
-    </nav>
+    </div>
 
-    <!-- 主体 -->
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <!-- 2. 控制台 -->
+    <div id="admin-main-view" class="hidden w-full h-[100dvh] flex relative overflow-hidden">
         
-        <!-- 视图一：前台首页 -->
-        <div id="home-view" class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            
-            <!-- 左侧 3 栏 -->
-            <div class="lg:col-span-3 space-y-6 flex flex-col justify-between">
-                <div class="space-y-6">
-                    <!-- 顶部横幅 -->
-                    <div class="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
-                        <h1 id="site-title-display" class="text-2xl font-bold tracking-tight text-zinc-900">正在加载...</h1>
-                        <p id="site-subtitle-display" class="text-zinc-500 text-xs mt-1.5 leading-relaxed"></p>
-                    </div>
-
-                    <!-- 二级子分类药丸栏 -->
-                    <div id="category-filter-container" class="flex flex-wrap gap-2"></div>
-
-                    <!-- 4列卡片网格流 -->
-                    <div id="posts-list-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6"></div>
-                </div>
-
-                <!-- 分页 -->
-                <div id="pagination-container" class="flex justify-center items-center gap-1.5 pt-10"></div>
-            </div>
-
-            <!-- 右侧 1 栏 -->
+        <!-- 移动端遮罩层 -->
+        <div id="sidebar-overlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 hidden transition-all duration-300"></div>
+        
+        <!-- 左侧导航侧边栏 -->
+        <aside class="fixed md:static inset-y-0 left-0 w-64 bg-slate-900 text-slate-200 flex flex-col justify-between p-6 shrink-0 h-full z-50 -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
             <div class="space-y-6">
-                <!-- 搜索 -->
-                <div class="bg-white p-5 rounded-2xl border border-zinc-100 shadow-sm space-y-3">
-                    <h3 class="text-xs font-bold uppercase tracking-widest text-zinc-400">文章检索</h3>
-                    <div class="relative">
-                        <input type="text" id="search-input" onkeydown="handleSearch(event)" class="w-full border border-zinc-200 rounded-xl pl-4 pr-10 py-2.5 text-xs focus:ring-2 focus:ring-amber-500/10 focus:border-amber-500 focus:outline-none transition-all" placeholder="输入关键字并按回车搜索...">
-                        <button onclick="triggerSearch()" class="absolute right-3.5 top-3 text-zinc-400 hover:text-zinc-600 text-xs">🔍</button>
+                <!-- 头部品牌 -->
+                <div class="flex flex-col border-b border-slate-800 pb-5">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <span class="w-3.5 h-3.5 bg-amber-500 rounded-full"></span>
+                        <span id="sidebar-site-title" class="text-sm font-bold tracking-tight text-white line-clamp-1">blogs.nyc.mn 后台</span>
                     </div>
+                    <a href="./" target="_blank" class="w-full flex items-center justify-center space-x-2 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 transition-all border border-slate-700">
+                        <span>🏠</span> <span>打开网站前台 ↗</span>
+                    </a>
                 </div>
+                
+                <!-- 侧边栏菜单 -->
+                <nav class="space-y-1">
+                    <button id="menu-btn-posts" onclick="switchTab('panel-posts')" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all bg-indigo-600 text-white">
+                        <span>📂</span> <span class="tracking-wider">文章列表管理</span>
+                    </button>
+                    <button id="menu-btn-editor" onclick="switchTab('panel-editor')" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-800 hover:text-white">
+                        <span>✍️</span> <span class="tracking-wider">撰写新教程</span>
+                    </button>
+                    <button id="menu-btn-config" onclick="switchTab('panel-config')" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-800 hover:text-white">
+                        <span>⚙️</span> <span class="tracking-wider">站点全局配置</span>
+                    </button>
+                </nav>
+            </div>
 
-                <!-- 热门排行 -->
-                <div class="bg-white p-5 rounded-2xl border border-zinc-100 shadow-sm space-y-4">
-                    <div class="border-b border-zinc-100 pb-2 flex items-center justify-between">
-                        <h3 class="text-xs font-bold uppercase tracking-widest text-zinc-400">🔥 热门文章</h3>
-                        <span class="text-[10px] bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded font-bold">TOP 5</span>
+            <!-- 底端用户信息与退出 -->
+            <div class="border-t border-slate-800 pt-5 space-y-3">
+                <div class="flex items-center justify-between text-xs text-slate-400 px-2">
+                    <span>系统状态: 运行正常</span>
+                    <button onclick="showChangePasswordModal()" class="hover:text-amber-500 underline transition-colors">改密</button>
+                </div>
+                <button onclick="logoutAdmin()" class="w-full bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white py-2 rounded-lg text-xs font-semibold transition-all">
+                    退出登录
+                </button>
+            </div>
+        </aside>
+
+        <!-- 右侧主工作区 (带有独立的纵向滚动条) -->
+        <main class="flex-grow flex flex-col overflow-hidden h-full">
+            
+            <!-- 手机端顶栏 -->
+            <div class="flex items-center justify-between bg-white border-b border-zinc-100 p-4 md:hidden shrink-0">
+                <button onclick="toggleMobileSidebar()" class="text-zinc-600 hover:text-zinc-900 p-1 rounded hover:bg-zinc-50 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <span id="mobile-brand-title" class="text-sm font-bold text-zinc-900">奶油控制台</span>
+                <div class="w-8 h-8 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-xs">👤</div>
+            </div>
+
+            <!-- 内容滚动窗口 -->
+            <div class="flex-grow p-4 sm:p-6 lg:p-8 overflow-y-auto h-full">
+                <div class="max-w-7xl mx-auto w-full space-y-8 pb-12">
+
+                    <!-- 面板 A：文章列表管理 -->
+                    <div id="panel-posts" class="admin-panel-content space-y-6">
+                        <div class="border-b border-zinc-100 pb-3">
+                            <h2 class="text-xl font-bold text-zinc-900 tracking-tight">文章列表管理</h2>
+                            <p class="text-xs text-zinc-400 mt-1">管理、修改、删除和一键筛选已发布的文章</p>
+                        </div>
+
+                        <!-- 组合筛选条 -->
+                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-white p-4 rounded-xl border border-zinc-100 shadow-sm">
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">🔍 标题检索</label>
+                                <!-- 【字号适配】：手机端 text-[16px] 防放大，电脑端 md:text-xs 保持小巧 -->
+                                <input type="text" id="admin-filter-q" oninput="filterAdminTable()" class="w-full border border-zinc-200 rounded-lg px-3 py-1.5 text-[16px] md:text-xs focus:outline-indigo-500 bg-white" placeholder="检索标题关键词...">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">📂 筛选大系列</label>
+                                <select id="admin-filter-series" onchange="filterAdminTable()" class="w-full border border-zinc-200 rounded-lg px-3 py-1.5 text-[16px] md:text-xs focus:outline-indigo-500 bg-white bg-white"></select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">🏷️ 筛选子分类</label>
+                                <select id="admin-filter-category" onchange="filterAdminTable()" class="w-full border border-zinc-200 rounded-lg px-3 py-1.5 text-[16px] md:text-xs focus:outline-indigo-500 bg-white"></select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">🔒 筛选发布状态</label>
+                                <select id="admin-filter-status" onchange="filterAdminTable()" class="w-full border border-zinc-200 rounded-lg px-3 py-1.5 text-[16px] md:text-xs focus:outline-indigo-500 bg-white">
+                                    <option value="">全部状态</option>
+                                    <option value="publish">公开 (Publish)</option>
+                                    <option value="draft">隐藏 (Draft)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 数据表格 -->
+                        <div class="bg-white rounded-xl border border-zinc-100 shadow-sm overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm text-zinc-600">
+                                    <thead>
+                                        <tr class="bg-zinc-50 border-b border-zinc-100 text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+                                            <th class="px-6 py-3.5">文章标题</th>
+                                            <th class="px-6 py-3.5">所属系列 ➔ 子分类</th>
+                                            <th class="px-6 py-3.5">权重 ➔ 浏览 ➔ 状态</th>
+                                            <th class="px-6 py-3.5 text-right">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-posts-table" class="divide-y divide-zinc-100"></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                    <div id="popular-posts-container" class="space-y-3"></div>
+
+                    <!-- 面板 B：撰写文章 (输入框已全线配置 text-[16px] 防手机对焦缩放) -->
+                    <div id="panel-editor" class="admin-panel-content space-y-6 hidden">
+                        <div class="border-b border-zinc-100 pb-3">
+                            <h2 id="editor-title" class="text-xl font-bold text-zinc-900 tracking-tight">撰写新教程</h2>
+                            <p class="text-xs text-zinc-400 mt-1">使用 Vditor 所见即所得编辑器进行长文排版创作</p>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-xl border border-zinc-200/60 shadow-sm space-y-5 relative">
+                            <!-- 第一行 -->
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">唯一 ID (不可修改)</label>
+                                    <input type="text" id="admin-id" class="w-full border border-zinc-200 rounded-lg px-3.5 py-2 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all" placeholder="例如: advanced-markdown">
+                                </div>
+                                <div class="sm:col-span-3">
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">文章标题</label>
+                                    <input type="text" id="admin-title" class="w-full border border-zinc-200 rounded-lg px-3.5 py-2 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all" placeholder="请输入文章主标题">
+                                </div>
+                            </div>
+
+                            <!-- 第二行 -->
+                            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">所属大系列导航</label>
+                                    <select id="admin-series" class="w-full border border-zinc-200 rounded-lg px-3.5 h-10 py-2 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none bg-white"></select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">二级子分类选择</label>
+                                    <select id="admin-category" class="w-full border border-zinc-200 rounded-lg px-3.5 h-10 py-2 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none bg-white"></select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">排序权重 (数字越大越靠前)</label>
+                                    <input type="number" id="admin-weight" class="w-full border border-zinc-200 rounded-lg px-3.5 h-10 py-2 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all" value="0">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">发布显示状态</label>
+                                    <select id="admin-status" class="w-full border border-zinc-200 rounded-lg px-3.5 h-10 py-2 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none bg-white">
+                                        <option value="publish">🟢 公开发布 (Publish)</option>
+                                        <option value="draft">🔴 隐藏草稿 (Draft - 仅供秘密链接预览)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- 第三行 -->
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div class="sm:col-span-2">
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">文章摘要说明</label>
+                                    <input type="text" id="admin-summary" class="w-full border border-zinc-200 rounded-lg px-3.5 py-2 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all" placeholder="请输入文章摘要">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">首页特色封面图 URL</label>
+                                    <div class="flex gap-2">
+                                        <input type="text" id="admin-cover" class="flex-grow border border-zinc-200 rounded-lg px-3.5 py-2 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all" placeholder="https://images.blogs.nyc.mn/xxx.png">
+                                        <button onclick="triggerCoverUpload()" class="bg-zinc-800 hover:bg-zinc-900 text-white text-xs px-4 rounded-lg font-bold transition-all shrink-0">上传</button>
+                                    </div>
+                                    <input type="file" id="cover-file-input" accept="image/*" class="hidden" onchange="handleCoverFileSelected()">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">正文编辑器</label>
+                                <div id="vditor-container" class="w-full"></div>
+                            </div>
+                            
+                            <!-- 悬浮固底操作栏 -->
+                            <div class="sticky bottom-0 bg-white/95 backdrop-blur-sm py-4 border-t border-zinc-100 z-40 flex justify-end gap-3">
+                                <button onclick="cancelEdit()" class="border border-zinc-200 hover:bg-zinc-50 text-zinc-600 px-5 py-2 rounded-lg text-sm font-medium transition-colors">
+                                    取消重置
+                                </button>
+                                <button onclick="publishPost()" id="publish-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm">
+                                    直接发布（瞬间生效）
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 面板 C：全局配置管理 -->
+                    <div id="panel-config" class="admin-panel-content space-y-6 hidden">
+                        <div class="border-b border-zinc-100 pb-3">
+                            <h2 class="text-xl font-bold text-zinc-900 tracking-tight">自定义站点全局配置与大系列文案</h2>
+                            <p class="text-xs text-zinc-400 mt-1">在线管理您的一二级目导航、网站名、右上角工具外链及全局排版</p>
+                        </div>
+
+                        <!-- 分区 1 -->
+                        <div class="bg-white p-6 rounded-xl border border-zinc-100 shadow-sm space-y-4">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-600 border-b border-zinc-50 pb-2 flex items-center gap-1.5">
+                                <span>📝</span> 站点基础文本与显示
+                            </h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-zinc-500 mb-1.5">网站主标题（Title）</label>
+                                    <input type="text" id="config-title" class="w-full border border-zinc-200 rounded-lg px-3.5 py-2 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all">
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="block text-xs font-semibold text-zinc-500 mb-1.5">副标题 / 描述说明（Slogan）</label>
+                                    <input type="text" id="config-subtitle" class="w-full border border-zinc-200 rounded-lg px-3.5 py-2 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 分区 2 -->
+                        <div class="bg-white p-6 rounded-xl border border-zinc-100 shadow-sm space-y-4">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-600 border-b border-zinc-50 pb-2 flex items-center gap-1.5">
+                                <span>📂</span> 分类体系与卡片排版控制
+                            </h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-zinc-500 mb-1.5">一级大系列导航栏（用英文逗号隔开）</label>
+                                    <input type="text" id="config-series" class="w-full border border-zinc-200 rounded-lg px-3.5 py-2 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-zinc-500 mb-1.5">二级子分类标签栏（用英文逗号隔开）</label>
+                                    <input type="text" id="config-categories" class="w-full border border-zinc-200 rounded-lg px-3.5 py-2 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-zinc-500 mb-1.5">全局卡片排版模式</label>
+                                    <select id="config-layout-mode" class="w-full border border-zinc-200 rounded-lg px-3.5 h-10 py-2 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-500/10 focus:outline-none bg-white">
+                                        <option value="standard">图片 + 标题 + 摘要 (标准样式)</option>
+                                        <option value="simple">图片 + 标题 (极简缩略样式)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 分区 3 -->
+                        <div class="bg-white p-6 rounded-xl border border-zinc-100 shadow-sm space-y-4">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-600 border-b border-zinc-50 pb-2 flex items-center gap-1.5">
+                                <span>🔗</span> 右上方外链导航配置
+                            </h3>
+                            <div class="space-y-2">
+                                <label class="block text-xs font-semibold text-zinc-500">外链导航数据 (格式: 名称, 链接)</label>
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+                                    <textarea id="config-nav-links" rows="4" class="md:col-span-3 w-full border border-zinc-200 rounded-xl p-4 text-[16px] md:text-xs font-mono focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all" placeholder="订阅转换, https://sub.blogs.nyc.mn&#10;IP查询, https://ip.blogs.nyc.mn"></textarea>
+                                    <div class="md:col-span-1 bg-zinc-50 p-4 rounded-xl border border-zinc-100 space-y-2 text-[11px] text-zinc-400 leading-relaxed">
+                                        <p class="font-bold text-zinc-500">💡 书写说明：</p>
+                                        <p>1. 每行代表一个链接。</p>
+                                        <p>2. 请使用 **英文半角逗号** `,` 隔开名称和链接。</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-end pt-4 border-t border-zinc-100">
+                                <button onclick="saveSiteConfig()" id="save-config-btn" class="bg-zinc-900 hover:bg-zinc-800 text-white px-5 py-2 rounded-lg text-xs font-semibold transition-all shadow-sm">
+                                    更新配置（瞬间生效）
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
+        </main>
+    </div>
 
-        </div>
-
-        <!-- 视图二：文章详情页 (宽度已升级为更宽舒展的 5xl) -->
-        <div id="post-view" class="hidden max-w-5xl mx-auto bg-white p-8 rounded-2xl border border-zinc-100 shadow-sm">
-            <a href="#/" class="mb-8 inline-block text-xs font-bold uppercase tracking-wider text-zinc-400 hover:text-amber-500 flex items-center gap-1.5 transition-colors">
-                ← 返回首页
-            </a>
-            <div class="mb-6 text-xs text-zinc-400 flex gap-4 border-b border-zinc-100 pb-4">
-                <span id="post-date"></span>
-                <span id="post-category" class="font-bold text-amber-500"></span>
-                <span id="post-views-count">阅读量: -</span>
-            </div>
-            <article id="post-content" class="prose prose-zinc prose-amber max-w-none 
-                prose-headings:font-bold prose-headings:tracking-tight
-                prose-img:rounded-xl prose-img:shadow-md prose-img:mx-auto prose-img:border prose-img:border-zinc-100
-                prose-pre:bg-[#0d1117] prose-pre:border prose-pre:border-zinc-800 prose-pre:rounded-xl prose-pre:p-0"></article>
-        </div>
-
-    </main>
-
-    <!-- 页脚 -->
-    <footer class="bg-white border-t border-zinc-100 py-10 mt-auto text-xs text-zinc-400 tracking-wide">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="flex items-center space-x-2">
-                <span class="w-2 h-2 bg-amber-500 rounded-full inline-block"></span>
-                <span>blogs.nyc.mn • 自适应 6.5 极速前端版</span>
-            </div>
-            <div class="text-[11px] text-zinc-400">
-                Powered by <a href="https://pages.cloudflare.com" target="_blank" class="hover:underline text-amber-500">Cloudflare Pages</a>
+    <!-- 修改密码弹窗 -->
+    <div id="password-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-2xl w-80 shadow-lg space-y-4">
+            <h3 class="text-base font-bold text-zinc-900">修改后台管理密码</h3>
+            <input type="password" id="new-password" class="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:outline-indigo-500" placeholder="请输入新密码">
+            <div class="flex justify-end gap-2">
+                <button onclick="closePasswordModal()" class="text-zinc-500 text-xs hover:underline px-3 py-1">取消</button>
+                <button onclick="submitChangePassword()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-4 py-1.5 rounded-lg transition-all">确定修改</button>
             </div>
         </div>
-    </footer>
+    </div>
 
     <script>
+        let vditorInstance = null;
         let R2_DOMAIN = "";
-        let currentFilterSeries = "";    
-        let currentFilterCategory = "";  
-        let currentSearchQuery = "";     
-        
         let activeCategories = [];       
         let activeSeriesList = [];       
         let dbNavMeta = {};              
-        let currentPageNum = 1;
-        let globalLayoutMode = "standard";
+        let isEditing = false;
+        let mobileSidebarOpen = false; 
 
-        marked.setOptions({
-            highlight: function(code, lang) {
-                const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-                return hljs.highlight(code, { language }).value;
-            },
-            langPrefix: 'hljs language-'
-        });
-
-        window.addEventListener('hashchange', handleRouting);
         window.addEventListener('load', async () => {
-            await loadSiteConfig(); 
-            await fetchNavMeta();   
-            handleRouting();        
+            const password = getActivePassword();
+            if (password) {
+                document.getElementById('admin-login-view').classList.add('hidden');
+                document.getElementById('admin-main-view').classList.remove('hidden');
+                await loadSiteConfig();
+                await refreshAdminTable();
+                initVditor();
+            } else {
+                document.getElementById('admin-login-view').classList.remove('hidden');
+                document.getElementById('admin-main-view').classList.add('hidden');
+            }
         });
 
-        function handleRouting() {
-            const hash = window.location.hash;
-            if (hash.startsWith('#/post/')) {
-                const postId = hash.replace('#/post/', '');
-                loadPost(postId);
-            } else if (hash.startsWith('#/series/')) {
-                const seriesName = decodeURIComponent(hash.replace('#/series/', ''));
-                showSeriesView(seriesName);
-            } else {
-                showHomeView();
+        // 【屏幕旋转与缩放重绘监听】：当用户在移动端旋转屏幕或不慎拉伸时，强制重置并校准视口
+        window.addEventListener('resize', () => {
+            const viewport = document.querySelector('meta[name="viewport"]');
+            if (viewport) {
+                viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0');
             }
+        });
+
+        function toggleMobileSidebar() {
+            const sidebar = document.querySelector('aside');
+            const overlay = document.getElementById('sidebar-overlay');
+            if (!sidebar || !overlay) return;
+
+            if (mobileSidebarOpen) {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+                mobileSidebarOpen = false;
+            } else {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+                mobileSidebarOpen = true;
+            }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.admin-panel-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+
+            document.querySelectorAll('nav button').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('text-slate-300', 'hover:bg-slate-800', 'hover:text-white');
+            });
+
+            const activeBtnMap = {
+                'panel-posts': 'menu-btn-posts',
+                'panel-editor': 'menu-btn-editor',
+                'panel-config': 'menu-btn-config'
+            };
+            const activeBtn = document.getElementById(activeBtnMap[tabId]);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-300', 'hover:bg-slate-800', 'hover:text-white');
+                activeBtn.classList.add('bg-indigo-600', 'text-white');
+            }
+
+            if (mobileSidebarOpen) {
+                toggleMobileSidebar();
+            }
+        }
+
+        async function verifyAndLogin() {
+            const password = safeGetValue('admin-pass');
+            if (!password) { alert('密码不可为空'); return; }
+
+            try {
+                const res = await fetch('./api/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: "login", password })
+                });
+
+                if (res.ok) {
+                    sessionStorage.setItem('admin_password', password);
+                    document.getElementById('admin-login-view').classList.add('hidden');
+                    document.getElementById('admin-main-view').classList.remove('hidden');
+                    await loadSiteConfig();
+                    await refreshAdminTable();
+                    initVditor();
+                } else {
+                    alert('验证失败');
+                }
+            } catch (err) {
+                alert('登录异常: ' + err.message);
+            }
+        }
+
+        function getActivePassword() { return sessionStorage.getItem('admin_password'); }
+
+        function logoutAdmin() {
+            sessionStorage.removeItem('admin_password');
+            const pInput = document.getElementById('admin-pass');
+            if (pInput) pInput.value = '';
+            document.getElementById('admin-main-view').classList.add('hidden');
+            document.getElementById('admin-login-view').classList.remove('hidden');
         }
 
         async function loadSiteConfig() {
@@ -190,358 +445,458 @@
                 const data = await res.json();
                 
                 const title = data.site_title || "Blogs.nyc.mn";
-                const subtitle = data.site_subtitle || "无服务器数字花园";
                 activeCategories = JSON.parse(data.site_categories || '["技术","教程","随笔","思考"]');
                 activeSeriesList = JSON.parse(data.site_series || '["科学上网","谷歌系列","NAS系列"]');
                 const rawNavLinks = JSON.parse(data.site_nav_links || '[{"name": "订阅转换", "url": "https://sub.blogs.nyc.mn"}]');
                 globalLayoutMode = data.site_layout_mode || "standard";
 
-                document.title = title;
-                document.getElementById('nav-site-title').innerText = title;
-                document.getElementById('site-title-display').innerText = title;
-                document.getElementById('site-subtitle-display').innerText = subtitle;
+                document.title = title + " - 后台控制面板";
 
-                renderCustomNavbarLinks(rawNavLinks);
-                renderCategoryFilters();
+                const sidebarTitle = document.getElementById('sidebar-site-title');
+                if (sidebarTitle) {
+                    sidebarTitle.innerText = title + ' 后台';
+                }
+
+                document.getElementById('config-title').value = title;
+                document.getElementById('config-subtitle').value = data.site_subtitle || "无服务器数字花园";
+                document.getElementById('config-categories').value = activeCategories.join(', ');
+                document.getElementById('config-series').value = activeSeriesList.join(', ');
+                document.getElementById('config-nav-links').value = rawNavLinks.map(item => `${item.name}, ${item.url}`).join('\n');
+                
+                setSelectValue('config-layout-mode', globalLayoutMode);
+
+                fillCategorySelect();
+                fillSeriesSelect();
+                fillAdminFilterSelects(); 
 
             } catch (err) {
                 console.error("加载全局配置出错:", err);
                 activeCategories = ["技术", "教程", "随笔", "思考"];
                 activeSeriesList = ["科学上网", "谷歌系列", "NAS系列"];
-                document.title = "blogs.nyc.mn";
-                renderCategoryFilters();
+                fillCategorySelect();
+                fillSeriesSelect();
+                fillAdminFilterSelects();
             }
         }
 
-        function renderCustomNavbarLinks(linksArray) {
-            const container = document.getElementById('custom-navbar-links');
-            if (!container) return;
-            container.innerHTML = '';
-            linksArray.forEach(item => {
-                container.innerHTML += `
-                    <a href="${item.url}" target="_blank" class="hover:text-amber-500 transition-colors">${item.name}</a>
-                `;
+        function fillCategorySelect() {
+            const select = document.getElementById('admin-category');
+            if (!select) return;
+            select.innerHTML = '';
+            activeCategories.forEach(cat => {
+                select.innerHTML += `<option value="${cat}">${cat}</option>`;
             });
+            select.innerHTML += `<option value="未分类">未分类</option>`;
         }
 
-        async function fetchNavMeta() {
-            try {
-                const res = await fetch('./api/posts?get_nav_meta=true&_t=' + Date.now());
-                dbNavMeta = await res.json();
-                
-                const finalSeriesList = Array.from(new Set([...activeSeriesList, ...Object.keys(dbNavMeta)]));
+        function fillSeriesSelect() {
+            const select = document.getElementById('admin-series');
+            if (!select) return;
+            select.innerHTML = '';
+            activeSeriesList.forEach(series => {
+                select.innerHTML += `<option value="${series}">${series}</option>`;
+            });
+            select.innerHTML += `<option value="默认系列">默认系列</option>`;
+        }
 
-                const navContainer = document.getElementById('series-navbar-container');
-                navContainer.innerHTML = '';
-                
-                finalSeriesList.forEach(series => {
-                    const isSelected = currentFilterSeries === series;
-                    navContainer.innerHTML += `
-                        <a href="#/series/${encodeURIComponent(series)}" class="hover:text-amber-500 transition-colors ${isSelected ? 'text-amber-500 font-bold border-b-2 border-amber-500 pb-1' : ''}">${series}</a>
-                    `;
+        function fillAdminFilterSelects() {
+            const sSelect = document.getElementById('admin-filter-series');
+            if (sSelect) {
+                sSelect.innerHTML = '<option value="">全部大系列</option>';
+                activeSeriesList.forEach(s => {
+                    sSelect.innerHTML += `<option value="${s}">${s}</option>`;
                 });
+            }
+            const cSelect = document.getElementById('admin-filter-category');
+            if (cSelect) {
+                cSelect.innerHTML = '<option value="">全部子分类</option>';
+                activeCategories.forEach(c => {
+                    cSelect.innerHTML += `<option value="${c}">${c}</option>`;
+                });
+            }
+        }
+
+        function safeGetValue(id) {
+            const el = document.getElementById(id);
+            return el ? el.value : "";
+        }
+
+        function setSelectValue(id, val) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            let exists = false;
+            for (let i = 0; i < el.options.length; i++) {
+                if (el.options[i].value === val) { exists = true; break; }
+            }
+            if (!exists && val) {
+                const opt = document.createElement('option');
+                opt.value = opt.text = val;
+                el.add(opt);
+            }
+            el.value = val;
+        }
+
+        function triggerCoverUpload() { document.getElementById('cover-file-input').click(); }
+
+        async function handleCoverFileSelected() {
+            const fileInput = document.getElementById('cover-file-input');
+            if (fileInput.files.length === 0) return;
+            const file = fileInput.files[0];
+            const uploadBtn = document.querySelector('button[onclick="triggerCoverUpload()"]');
+            
+            uploadBtn.innerText = '传中...';
+            uploadBtn.disabled = true;
+
+            const url = await uploadImageViaVditor(file); 
+            if (url) document.getElementById('admin-cover').value = url; 
+            
+            uploadBtn.innerText = '上传';
+            uploadBtn.disabled = false;
+            fileInput.value = ''; 
+        }
+
+        async function saveSiteConfig() {
+            const password = getActivePassword();
+            const title = safeGetValue('config-title').trim();
+            const subtitle = safeGetValue('config-subtitle').trim();
+            const categoriesStr = safeGetValue('config-categories').trim();
+            const seriesStr = safeGetValue('config-series').trim();
+            const navLinksStr = safeGetValue('config-nav-links').trim(); 
+            const site_layout_mode = document.getElementById('config-layout-mode').value;
+            const btn = document.getElementById('save-config-btn');
+
+            if (!title) { alert('主标题不可为空'); return; }
+            const categoriesArr = categoriesStr.split(',').map(c => c.trim()).filter(c => c.length > 0);
+            const seriesArr = seriesStr.split(',').map(c => c.trim()).filter(c => c.length > 0);
+
+            const navLinksArr = navLinksStr.split('\n').map(line => {
+                const parts = line.split(',');
+                const name = parts[0] ? parts[0].trim() : "";
+                const url = parts[1] ? parts[1].trim() : "";
+                return { name, url };
+            }).filter(item => item.name && item.url);
+
+            if (btn) { btn.innerText = '正在提交...'; btn.disabled = true; }
+
+            try {
+                const res = await fetch('./api/config', {
+                    method: 'POST',
+                    headers: { 'Authorization': password, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        site_title: title,
+                        site_subtitle: subtitle,
+                        site_categories: categoriesArr,
+                        site_series: seriesArr,
+                        site_nav_links: navLinksArr,
+                        site_layout_mode
+                    })
+                });
+
+                if (!res.ok) throw new Error();
+                alert('配置修改成功！');
+                await loadSiteConfig();
             } catch (e) {
-                console.error("生成导航元数据出错:", e);
+                alert('修改失败');
+            } finally {
+                if (btn) { btn.innerText = '更新配置（瞬间生效）'; btn.disabled = false; }
             }
         }
 
-        function renderCategoryFilters() {
-            const container = document.getElementById('category-filter-container');
-            if (!container) return;
+        function showChangePasswordModal() { document.getElementById('password-modal').classList.remove('hidden'); }
+        function closePasswordModal() { document.getElementById('password-modal').classList.add('hidden'); }
 
-            let allowedCategories = activeCategories; 
-            
-            if (currentFilterSeries && dbNavMeta[currentFilterSeries] && dbNavMeta[currentFilterSeries].length > 0) {
-                allowedCategories = dbNavMeta[currentFilterSeries];
+        async function submitChangePassword() {
+            const password = getActivePassword();
+            const newPassword = safeGetValue('new-password').trim();
+            if (!newPassword) { alert('新密码不可为空'); return; }
+
+            try {
+                const res = await fetch('./api/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: "change_password", password, newPassword })
+                });
+
+                if (res.ok) {
+                    alert('密码已成功修改！');
+                    closePasswordModal();
+                    logoutAdmin();
+                } else {
+                    alert('修改失败');
+                }
+            } catch (err) {
+                alert('修改出错: ' + err.message);
             }
+        }
 
-            container.innerHTML = `
-                <button onclick="filterByCategory('')" class="px-4 py-2 rounded-full text-xs font-semibold tracking-wide transition-all ${!currentFilterCategory ? 'bg-zinc-950 text-white shadow-sm' : 'bg-white text-zinc-500 border border-zinc-100 hover:bg-zinc-50'}">
-                    全部
-                </button>
-            `;
-            allowedCategories.forEach(cat => {
-                const isSelected = currentFilterCategory === cat;
-                container.innerHTML += `
-                    <button onclick="filterByCategory('${cat}')" class="px-4 py-2 rounded-full text-xs font-semibold tracking-wide transition-all ${isSelected ? 'bg-zinc-950 text-white shadow-sm' : 'bg-white text-zinc-500 border border-zinc-100 hover:bg-zinc-50'}">
-                        ${cat}
-                    </button>
-                `;
+        function initVditor() {
+            if (vditorInstance) return;
+            vditorInstance = new Vditor('vditor-container', {
+                height: 500,
+                mode: 'wysiwyg',
+                placeholder: "撰写教程...支持拖拽粘贴截图自动无感上传至 R2 并排版呈现！",
+                cache: { enable: false },
+                toolbarConfig: { pin: true },
+                toolbar: [
+                    "emoji", "headings", "bold", "italic", "strike", "link", "|",
+                    "list", "ordered-list", "check", "outdent", "indent", "|",
+                    "quote", "line", "code", "inline-code", "insert-after", "insert-before", "|",
+                    "table", "|",
+                    "undo", "redo", "|",
+                    "edit-mode", "html", "preview", "both", "fullscreen"
+                ],
+                upload: {
+                    accept: 'image/*',
+                    handler: async (files) => {
+                        const file = files[0];
+                        const url = await uploadImageViaVditor(file);
+                        if (url) { vditorInstance.insertValue(`![图片描述](${url})`); }
+                        return null;
+                    }
+                }
             });
         }
 
-        async function filterByCategory(cat) {
-            currentFilterCategory = cat;
-            currentPageNum = 1;
-            renderCategoryFilters();
-            await fetchPostsAndRender(1);
-        }
-
-        async function handleSearch(e) {
-            if (e.key === 'Enter') {
-                await triggerSearch();
-            }
-        }
-
-        async function triggerSearch() {
-            currentSearchQuery = document.getElementById('search-input').value.trim();
-            currentPageNum = 1;
-            await fetchPostsAndRender(1);
-        }
-
-        async function showHomeView() {
-            currentFilterSeries = "";    
-            currentFilterCategory = "";  
-            currentSearchQuery = "";     
-            const sInput = document.getElementById('search-input');
-            if (sInput) sInput.value = "";
-
-            await fetchNavMeta();        
-            renderCategoryFilters();     
-
-            document.getElementById('home-view').classList.remove('hidden');
-            document.getElementById('post-view').classList.add('hidden');
-            
-            await fetchPostsAndRender(1);
-            await fetchPopularPosts();
-        }
-
-        async function showSeriesView(seriesName) {
-            currentFilterSeries = seriesName; 
-            currentFilterCategory = "";       
-            currentSearchQuery = "";
-            const sInput = document.getElementById('search-input');
-            if (sInput) sInput.value = "";
-
-            await fetchNavMeta();             
-            renderCategoryFilters();          
-
-            document.getElementById('home-view').classList.remove('hidden');
-            document.getElementById('post-view').classList.add('hidden');
-            
-            await fetchPostsAndRender(1);
-            await fetchPopularPosts();
-        }
-
-        // 4列奶油栅格核心渲染器 (已全面加固 GPU 加速并采用自适应 aspect-video 彻底修复旋转/缩放错落)
-        async function fetchPostsAndRender(page = 1) {
-            currentPageNum = page;
-            const container = document.getElementById('posts-list-container');
-            if (!container) return;
-            container.innerHTML = '<p class="text-zinc-400 text-sm">正在加载中...</p>';
+        async function uploadImageViaVditor(file) {
+            const password = getActivePassword();
+            const formData = new FormData();
+            formData.append('image', file);
 
             try {
-                let url = `./api/posts?page=${page}&limit=12&_t=${Date.now()}`;
-                if (currentFilterCategory) url += `&category=${encodeURIComponent(currentFilterCategory)}`;
-                if (currentFilterSeries) url += `&series=${encodeURIComponent(currentFilterSeries)}`;
-                if (currentSearchQuery) url += `&q=${encodeURIComponent(currentSearchQuery)}`;
-
-                const response = await fetch(url);
-                const resData = await response.json();
-                
-                const posts = resData.results;
-                const total = resData.total;
-                const limit = resData.limit;
-
-                container.innerHTML = '';
-
-                if (posts.length === 0) {
-                    container.innerHTML = '<div class="col-span-full text-zinc-400 text-sm py-12 text-center">暂无发布内容。</div>';
-                    document.getElementById('pagination-container').innerHTML = '';
-                    return;
-                }
-
-                posts.forEach((post, index) => {
-                    // 1. 为封面图添加 rounded-t-2xl，防止 scale 动画导致的直角临时溢出 Bug
-                    const coverHtml = post.cover 
-                        ? `<img src="${post.cover}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 rounded-t-2xl" alt="${post.title}">`
-                        : `<div class="w-full h-full bg-gradient-to-tr ${getGradient(index)} flex items-center justify-center text-white/10 font-bold text-3xl select-none rounded-t-2xl">BLOGS</div>`;
-
-                    const summaryHtml = (globalLayoutMode !== 'simple')
-                        ? `<p class="text-zinc-500 text-xs leading-relaxed line-clamp-2">${post.summary}</p>`
-                        : '';
-
-                    container.innerHTML += `
-                        <div class="group bg-white rounded-2xl border border-zinc-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 overflow-hidden flex flex-col justify-between">
-                            <div>
-                                <!-- 2. 核心大重构：高度由 h-44 改为标准的 aspect-video (16:9比例)，任何分辨率下图片都完美缩放，绝无上下裁剪显示不全 -->
-                                <!-- 加上 transform translate-z-0 isolate 强制开启 Webkit GPU 渲染层，彻底解决圆角临时直角化 Bug -->
-                                <a href="#/post/${post.id}" class="block aspect-video w-full overflow-hidden relative bg-zinc-50 rounded-t-2xl transform translate-z-0 isolate">
-                                    ${coverHtml}
-                                    <span class="absolute top-3 left-3 bg-zinc-900/80 text-white text-[10px] font-bold px-2 py-0.5 rounded backdrop-blur-sm uppercase z-10">${post.category || '未分类'}</span>
-                                </a>
-                                <div class="p-5 space-y-2">
-                                    <h3 class="text-sm font-bold text-zinc-900 line-clamp-1 group-hover:text-amber-500 transition-colors">
-                                        <a href="#/post/${post.id}">${post.title}</a>
-                                    </h3>
-                                    ${summaryHtml}
-                                </div>
-                            </div>
-                            <div class="px-5 pb-5 pt-2 border-t border-zinc-50 flex items-center justify-between text-[10px] text-zinc-400">
-                                <span>📅 ${post.date}</span>
-                                <span>👁️ ${post.views}</span>
-                            </div>
-                        </div>
-                    `;
+                const res = await fetch('./api/upload', {
+                    method: 'POST',
+                    headers: { 'Authorization': password },
+                    body: formData
                 });
 
-                renderPagination(total, limit, page);
+                if (!res.ok) throw new Error(await res.text());
+                const data = await res.json();
 
+                const urlObj = new URL(data.url);
+                R2_DOMAIN = urlObj.origin;
+
+                return data.url;
             } catch (err) {
-                container.innerHTML = `<div class="col-span-full text-red-500 text-sm text-center">获取文章数据失败，请确认配置。</div>`;
+                alert('图片同步到 R2 存储桶失败: ' + err.message);
+                return null;
             }
         }
 
-        function renderPagination(total, limit, currentPage) {
-            const container = document.getElementById('pagination-container');
-            if (!container) return;
+        async function refreshAdminTable() {
+            const tbody = document.getElementById('admin-posts-table');
+            if (!tbody) return;
+            tbody.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-zinc-400 text-xs">正在读取数据库...</td></tr>';
+            
+            try {
+                const password = getActivePassword(); 
+                const response = await fetch('./api/posts?_t=' + Date.now(), {
+                    headers: { 'Authorization': password } 
+                });
+                const posts = await response.json();
+                window.allPosts = posts.results || posts;
+                renderAdminTableRows(window.allPosts);
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-red-500 text-xs">列表加载失败。</td></tr>';
+            }
+        }
 
-            const totalPages = Math.ceil(total / limit);
-            if (totalPages <= 1) {
-                container.innerHTML = '';
+        function renderAdminTableRows(postsArray) {
+            const tbody = document.getElementById('admin-posts-table');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (postsArray.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-zinc-400 text-xs">无符合筛选条件的文章</td></tr>';
                 return;
             }
 
-            let pageHtml = "";
+            postsArray.forEach((post) => {
+                const originalIndex = window.allPosts.findIndex(p => p.id === post.id);
+                const statusBadge = post.status === 'draft' 
+                    ? `<span class="bg-red-50 text-red-600 px-2 py-0.5 rounded text-[10px] font-bold">隐藏 (Draft)</span>`
+                    : `<span class="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-bold">公开 (Publish)</span>`;
 
-            if (currentPage > 1) {
-                pageHtml += `<button onclick="fetchPostsAndRender(${currentPage - 1})" class="px-3.5 py-1.5 text-xs font-semibold bg-[#343a40] text-gray-200 hover:bg-[#495057] active:scale-95 rounded transition-all">« 上一页</button>`;
-            }
-
-            let startPage = Math.max(1, currentPage - 2);
-            let endPage = Math.min(totalPages, currentPage + 2);
-
-            if (startPage > 1) {
-                pageHtml += `<button onclick="fetchPostsAndRender(1)" class="px-3 py-1.5 text-xs font-semibold bg-[#343a40] text-gray-200 hover:bg-[#495057] rounded transition-all">1</button>`;
-                if (startPage > 2) {
-                    pageHtml += `<span class="px-1 text-zinc-400 text-xs">...</span>`;
-                }
-            }
-
-            for (let i = startPage; i <= endPage; i++) {
-                if (i === currentPage) {
-                    pageHtml += `<span class="px-3 py-1.5 text-xs font-bold bg-amber-500 text-white rounded shadow-sm">${i}</span>`;
-                } else {
-                    pageHtml += `<button onclick="fetchPostsAndRender(${i})" class="px-3 py-1.5 text-xs font-semibold bg-[#343a40] text-gray-200 hover:bg-[#495057] rounded transition-all">${i}</button>`;
-                }
-            }
-
-            if (endPage < totalPages) {
-                if (endPage < totalPages - 1) {
-                    pageHtml += `<span class="px-1 text-zinc-400 text-xs">...</span>`;
-                }
-                pageHtml += `<button onclick="fetchPostsAndRender(${totalPages})" class="px-3 py-1.5 text-xs font-semibold bg-[#343a40] text-gray-200 hover:bg-[#495057] rounded transition-all">${totalPages}</button>`;
-            }
-
-            if (currentPage < totalPages) {
-                pageHtml += `<button onclick="fetchPostsAndRender(${currentPage + 1})" class="px-3.5 py-1.5 text-xs font-semibold bg-[#343a40] text-gray-200 hover:bg-[#495057] active:scale-95 rounded transition-all">下一页 »</button>`;
-            }
-
-            container.innerHTML = pageHtml;
+                tbody.innerHTML += `
+                    <tr class="border-b border-zinc-100 hover:bg-zinc-50/50 transition-colors">
+                        <td class="px-6 py-3.5 font-semibold text-zinc-900">${post.title}</td>
+                        <td class="px-6 py-3.5"><span class="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded text-xs font-semibold">${post.series || '默认'} ➔ ${post.category || '未分类'}</span></td>
+                        <td class="px-6 py-3.5 text-xs text-zinc-400">
+                            <span class="font-bold text-amber-600">⚓ ${post.weight || 0}</span> • 
+                            <span>👁️ ${post.views}</span> • 
+                            ${statusBadge}
+                        </td>
+                        <td class="px-6 py-3.5 text-right space-x-3">
+                            <a href="./index.html#/post/${post.id}" target="_blank" class="text-emerald-600 hover:text-emerald-800 font-semibold text-xs transition-all">查看 ↗</a>
+                            <button onclick="editPost(${originalIndex})" class="text-indigo-600 hover:text-indigo-800 font-semibold text-xs transition-all">编辑</button>
+                            <button onclick="deletePost('${post.id}')" class="text-red-600 hover:text-red-800 font-semibold text-xs transition-all">删除</button>
+                        </td>
+                    </tr>
+                `;
+            });
         }
 
-        async function fetchPopularPosts() {
-            const container = document.getElementById('popular-posts-container');
-            if (!container) return;
-            container.innerHTML = '<p class="text-zinc-400 text-xs">读取中...</p>';
+        function filterAdminTable() {
+            const query = safeGetValue('admin-filter-q').toLowerCase().trim();
+            const series = safeGetValue('admin-filter-series');
+            const category = safeGetValue('admin-filter-category');
+            const status = safeGetValue('admin-filter-status');
 
+            let filtered = window.allPosts || [];
+
+            if (query) { filtered = filtered.filter(p => p.title.toLowerCase().includes(query)); }
+            if (series) { filtered = filtered.filter(p => p.series === series); }
+            if (category) { filtered = filtered.filter(p => p.category === category); }
+            if (status) { filtered = filtered.filter(p => p.status === status); }
+
+            renderAdminTableRows(filtered);
+        }
+
+        function startNewPost() {
+            isEditing = false;
+            
+            const adminId = document.getElementById('admin-id');
+            if (adminId) { adminId.disabled = false; adminId.value = ''; }
+            const adminTitle = document.getElementById('admin-title');
+            if (adminTitle) adminTitle.value = '';
+            const adminSummary = document.getElementById('admin-summary');
+            if (adminSummary) adminSummary.value = '';
+            const adminCover = document.getElementById('admin-cover');
+            if (adminCover) adminCover.value = '';
+            const adminWeight = document.getElementById('admin-weight');
+            if (adminWeight) adminWeight.value = '0';
+            
+            const adminSeries = document.getElementById('admin-series');
+            if (adminSeries) { adminSeries.value = activeSeriesList[0] || '默认系列'; }
+            const adminCategory = document.getElementById('admin-category');
+            if (adminCategory) { adminCategory.value = activeCategories[0] || '未分类'; }
+            const adminStatus = document.getElementById('admin-status');
+            if (adminStatus) adminStatus.value = 'publish';
+            
+            if (vditorInstance) { vditorInstance.setValue(''); }
+            
+            document.getElementById('editor-title').innerText = '撰写新教程';
+            document.getElementById('publish-btn').innerText = '直接发布（瞬间生效）';
+            
+            switchTab('panel-editor');
+        }
+
+        async function publishPost() {
             try {
-                const response = await fetch(`./api/posts?popular=5&_t=${Date.now()}`);
-                const posts = await response.json();
-                container.innerHTML = '';
+                const password = getActivePassword();
+                const id = safeGetValue('admin-id').trim();
+                const title = safeGetValue('admin-title').trim(); 
+                const summary = safeGetValue('admin-summary').trim();
+                const cover = safeGetValue('admin-cover').trim();
+                const series = safeGetValue('admin-series') || '默认系列';
+                const category = safeGetValue('admin-category') || '未分类';
+                const status = safeGetValue('admin-status') || 'publish';
+                const weight = parseInt(safeGetValue('admin-weight')) || 0;
 
-                if (posts.length === 0) {
-                    container.innerHTML = '<p class="text-zinc-400 text-xs">暂无热度统计</p>';
+                if (!vditorInstance) {
+                    alert('系统检测到 Vditor 编辑器正在从云端加载中，请稍等 2 秒再试。');
+                    return;
+                }
+                const content = vditorInstance.getValue();
+
+                if (!id || !title || !content) {
+                    alert('请完整填写文章 ID、标题和正文内容！');
                     return;
                 }
 
-                posts.forEach((post, index) => {
-                    const thumbHtml = post.cover 
-                        ? `<img src="${post.cover}" class="w-full h-full object-cover animate-fade-in" alt="">`
-                        : `<div class="w-full h-full bg-gradient-to-tr ${getGradient(index)}"></div>`;
+                const btn = document.getElementById('publish-btn');
+                if (btn) { btn.innerText = '正在发布到 D1 与 R2...'; btn.disabled = true; }
 
-                    container.innerHTML += `
-                        <a href="#/post/${post.id}" class="flex items-center gap-3 p-1.5 hover:bg-zinc-50 rounded-lg transition-colors group animate-fade-in">
-                            <div class="w-12 h-12 rounded-md overflow-hidden bg-zinc-100 shrink-0">
-                                ${thumbHtml}
-                            </div>
-                            <div class="min-w-0 flex-grow">
-                                <h4 class="text-xs font-bold text-zinc-800 line-clamp-2 leading-snug group-hover:text-amber-500 transition-colors">${post.title}</h4>
-                                <div class="text-[9px] text-zinc-400 mt-1 flex justify-between">
-                                    <span>${post.date}</span>
-                                    <span class="font-bold text-amber-500">🔥 ${post.views}</span>
-                                </div>
-                            </div>
-                        </a>
-                    `;
+                const res = await fetch('./api/posts', {
+                    method: 'POST',
+                    headers: { 'Authorization': password, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id, title, summary, content, category, cover, series, status, weight,
+                        layout_mode: globalLayoutMode, 
+                        date: new Date().toISOString().split('T')[0]
+                    })
                 });
-            } catch (e) {
-                container.innerHTML = '<p class="text-red-500 text-xs">读取排行失败</p>';
+
+                if (!res.ok) throw new Error(await res.text());
+                alert('文章同步发布成功！');
+                
+                await refreshAdminTable();
+                startNewPost();
+                switchTab('panel-posts'); 
+            } catch (err) {
+                alert('【发布失败】详细错误信息:\n' + err.message);
+                const btn = document.getElementById('publish-btn');
+                if (btn) { btn.disabled = false; btn.innerText = '直接发布（瞬间生效）'; }
             }
         }
 
-        const gradients = [
-            "from-indigo-400 to-purple-500",
-            "from-pink-400 to-rose-500",
-            "from-cyan-400 to-blue-500",
-            "from-emerald-400 to-teal-500",
-            "from-amber-400 to-orange-500",
-            "from-violet-400 to-purple-500"
-        ];
-        function getGradient(index) {
-            return gradients[index % gradients.length];
+        async function editPost(index) {
+            try {
+                if (!window.allPosts || !window.allPosts[index]) {
+                    alert('系统找不到该行的数据，请刷新列表重试。');
+                    return;
+                }
+                const post = window.allPosts[index];
+
+                isEditing = true;
+                
+                document.getElementById('editor-title').innerText = `编辑教程: ${post.title || ''}`;
+                document.getElementById('publish-btn').innerText = '保存更新';
+                
+                const adminIdInput = document.getElementById('admin-id');
+                if (adminIdInput) { adminIdInput.value = post.id || ''; adminIdInput.disabled = true; }
+                
+                const adminTitle = document.getElementById('admin-title');
+                if (adminTitle) adminTitle.value = post.title || '';
+                const adminSummary = document.getElementById('admin-summary');
+                if (adminSummary) adminSummary.value = post.summary || '';
+                const adminCover = document.getElementById('admin-cover');
+                if (adminCover) adminCover.value = post.cover || '';
+                const adminWeight = document.getElementById('admin-weight');
+                if (adminWeight) adminWeight.value = post.weight || 0;
+                
+                setSelectValue('admin-series', post.series || '默认系列');
+                setSelectValue('admin-category', post.category || '未分类');
+                setSelectValue('admin-status', post.status || 'publish');
+
+                if (!vditorInstance) { alert('编辑器异常，请刷新页面。'); return; }
+                vditorInstance.setValue('正在从 R2 提取正文内容...');
+
+                switchTab('panel-editor');
+
+                const r2Base = R2_DOMAIN || `https://images.blogs.nyc.mn`;
+                const res = await fetch(`${r2Base}/posts/${post.id}.md?_t=` + Date.now());
+                if (!res.ok) throw new Error();
+                const text = await res.text();
+                vditorInstance.setValue(text);
+
+            } catch (e) {
+                alert('从 R2 读取正文失败，请确认跨域 CORS 策略已经正常设置。');
+                vditorInstance.setValue('');
+            }
         }
 
-        async function loadPost(postId) {
-            document.getElementById('home-view').classList.add('hidden');
-            document.getElementById('post-view').classList.remove('hidden');
-            
-            const postContent = document.getElementById('post-content');
-            postContent.innerHTML = '<p class="text-zinc-400 text-sm">正在加载...</p>';
+        async function deletePost(id) {
+            const password = getActivePassword();
+            if (!confirm(`警告：该操作将同时清除 D1 中的该文章记录，并物理清除该文章引用的 R2 媒体文件，是否继续？`)) return;
 
             try {
-                const r2Base = R2_DOMAIN || `https://images.blogs.nyc.mn`;
-                const response = await fetch(`${r2Base}/posts/${postId}.md?_t=` + Date.now());
-                
-                if (!response.ok) throw new Error();
-                const text = await response.text();
-                postContent.innerHTML = marked.parse(text);
+                const res = await fetch('./api/delete', {
+                    method: 'POST',
+                    headers: { 'Authorization': password, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
 
-                fetch(`./api/views?id=${postId}`, { method: 'POST' })
-                    .then(r => r.json())
-                    .then(data => {
-                        document.getElementById('post-views-count').innerText = `阅读量: ${data.views}`;
-                    }).catch(() => {
-                        document.getElementById('post-views-count').innerText = `阅读量: -`;
-                    });
-
-                addCopyButtons();
-                document.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
+                if (!res.ok) throw new Error(await res.text());
+                alert('文章和关联图片已完全物理销毁！');
+                await refreshAdminTable();
             } catch (err) {
-                postContent.innerHTML = '<p class="text-red-500 text-sm">无法从 R2 载入文章，请确保跨域策略配置成功。</p>';
+                alert('删除失败: ' + err.message);
             }
         }
 
-        function addCopyButtons() {
-            document.querySelectorAll('pre').forEach((preElement) => {
-                if (preElement.parentElement.classList.contains('code-block-wrapper')) return;
-                const wrapper = document.createElement('div');
-                wrapper.className = 'code-block-wrapper';
-                preElement.parentNode.insertBefore(wrapper, preElement);
-                wrapper.appendChild(preElement);
-
-                const button = document.createElement('button');
-                button.className = 'copy-btn';
-                button.innerText = '复制';
-                button.addEventListener('click', () => {
-                    const code = preElement.querySelector('code').innerText;
-                    navigator.clipboard.writeText(code).then(() => {
-                        button.innerText = '已复制';
-                        setTimeout(() => button.innerText = '复制', 2000);
-                    });
-                });
-                wrapper.appendChild(button);
-            });
+        function cancelEdit() {
+            startNewPost();
+            switchTab('panel-posts');
         }
     </script>
 </body>
