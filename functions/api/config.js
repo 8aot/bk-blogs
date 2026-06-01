@@ -9,21 +9,35 @@ async function verifyPassword(password, env) {
 export async function onRequest(context) {
   const { request, env } = context;
 
-  // 1. GET 请求：公开获取站点配置（加入 site_popular_limit）
+  // 1. GET 请求：公开获取站点配置（加入 site_r2_domain 获取支持）
   if (request.method === "GET") {
     try {
-      const rows = await env.DB.prepare("SELECT key, value FROM config WHERE key IN ('site_title', 'site_subtitle', 'site_categories', 'site_series', 'site_nav_links', 'site_layout_mode', 'site_popular_limit')").all();
+      const rows = await env.DB.prepare(`
+        SELECT key, value FROM config 
+        WHERE key IN (
+          'site_title', 'site_subtitle', 'site_categories', 
+          'site_series', 'site_nav_links', 'site_layout_mode', 
+          'site_popular_limit', 'site_r2_domain'
+        )
+      `).all();
+      
       const configMap = {};
       rows.results.forEach(row => {
         configMap[row.key] = row.value;
       });
+
+      // 如果 D1 数据库中未配置该字段，可以尝试读取 env 中的环境变量作为备选
+      if (!configMap['site_r2_domain'] && env.R2_PUBLIC_DOMAIN) {
+        configMap['site_r2_domain'] = env.R2_PUBLIC_DOMAIN;
+      }
+
       return new Response(JSON.stringify(configMap), { headers: { "Content-Type": "application/json" } });
     } catch (err) {
       return new Response(err.message, { status: 500 });
     }
   }
 
-  // 2. POST 请求：更新站点配置（修正 series_series 拼写笔误）
+  // 2. POST 请求：更新站点配置（加入 site_r2_domain 写入支持）
   if (request.method === "POST") {
     const authHeader = request.headers.get("Authorization");
     if (!(await verifyPassword(authHeader, env))) {
@@ -31,17 +45,27 @@ export async function onRequest(context) {
     }
 
     try {
-      const { site_title, site_subtitle, site_categories, site_series, site_nav_links, site_layout_mode, site_popular_limit } = await request.json();
+      const { 
+        site_title, 
+        site_subtitle, 
+        site_categories, 
+        site_series, 
+        site_nav_links, 
+        site_layout_mode, 
+        site_popular_limit,
+        site_r2_domain 
+      } = await request.json();
 
       const stmt = env.DB.prepare("INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)");
       await env.DB.batch([
         stmt.bind("site_title", site_title),
         stmt.bind("site_subtitle", site_subtitle),
         stmt.bind("site_categories", JSON.stringify(site_categories)),
-        stmt.bind("site_series", JSON.stringify(site_series)), // 修正完成
+        stmt.bind("site_series", JSON.stringify(site_series)), 
         stmt.bind("site_nav_links", JSON.stringify(site_nav_links)),
         stmt.bind("site_layout_mode", site_layout_mode),
-        stmt.bind("site_popular_limit", String(site_popular_limit))
+        stmt.bind("site_popular_limit", String(site_popular_limit)),
+        stmt.bind("site_r2_domain", site_r2_domain ? String(site_r2_domain).trim() : "")
       ]);
 
       return new Response(JSON.stringify({ success: true }), { headers: { "Content-Type": "application/json" } });
