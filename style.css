@@ -1,0 +1,179 @@
+/* ==============================================
+   style.css — 博客主题样式
+   使用方式：在 index.html <head> 中通过
+   <link rel="stylesheet" href="./style.css"> 引入
+   ============================================== */
+
+/* ── 1. 基础 & 背景 ─────────────────────────────── */
+html {
+    scroll-behavior: smooth;
+    background: #0f172a;          /* 最底层兜底深色，防任何白底漏出 */
+}
+
+body {
+    background: url('https://pic.netbian.com/uploads/allimg/250516/110318-17473645980a8c.jpg')
+                no-repeat center center fixed !important;
+    background-size: cover !important;
+    background-color: #0f172a !important;
+    min-height: 100vh;
+    color: #f8fafc;
+}
+
+/* main 区域强制透明，让背景图完整穿透 */
+main {
+    background: transparent !important;
+}
+
+
+/* ── 2. 导航 / 卡片 / 底栏：半透明暗黑材质 ─────────── */
+nav,
+.bg-white,
+footer,
+#home-view .bg-white,
+#post-view {
+    background: rgba(15, 23, 42, 0.60) !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+
+/* ── 3. 文字颜色 ────────────────────────────────── */
+body,
+.text-zinc-800,
+.text-zinc-700,
+.text-zinc-600 {
+    color: #f8fafc !important;
+}
+
+.text-zinc-500,
+.text-zinc-400,
+.text-slate-400 {
+    color: #94a3b8 !important;
+}
+
+.text-zinc-900 {
+    color: #ffffff !important;
+}
+
+h1, h2, h3, h4 {
+    color: #ffffff !important;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+#nav-site-title {
+    color: #ffffff !important;
+}
+
+
+/* ── 4. 边框 & 分割线 ───────────────────────────── */
+.border-zinc-100,
+.border-b,
+.border-t {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+
+/* ── 5. 搜索框 ──────────────────────────────────── */
+#search-input {
+    background: rgba(15, 23, 42, 0.55) !important;
+    color: #f8fafc !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+#search-input::placeholder {
+    color: #64748b !important;
+}
+
+
+/* ── 6. 代码块 & 复制按钮 ───────────────────────── */
+.code-block-wrapper {
+    position: relative;
+}
+
+.copy-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #9ca3af;
+    border: 1px solid rgba(156, 163, 175, 0.15);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.copy-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+}
+
+
+/* ── 7. 骨架屏 shimmer 动画 ─────────────────────── */
+@keyframes shimmer {
+    0%   { background-position: -800px 0; }
+    100% { background-position:  800px 0; }
+}
+
+.skeleton {
+    border-radius: 8px;
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.04) 25%,
+        rgba(255, 255, 255, 0.10) 50%,
+        rgba(255, 255, 255, 0.04) 75%
+    );
+    background-size: 800px 100%;
+    animation: shimmer 1.5s infinite linear;
+}
+
+
+/* ── 8. 文章卡片淡入动画 ────────────────────────── */
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.post-card {
+    animation: fadeUp 0.35s ease both;
+}
+
+
+/* ── 9. 点击爱心（JS动态注入，提前声明防闪烁）────── */
+.heart {
+    width: 10px;
+    height: 10px;
+    position: fixed;
+    background: #f00;
+    transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+    pointer-events: none;
+}
+
+.heart:after,
+.heart:before {
+    content: '';
+    width: inherit;
+    height: inherit;
+    background: inherit;
+    border-radius: 50%;
+    position: fixed;
+}
+
+.heart:after  { top: -5px; }
+.heart:before { left: -5px; }
+
+
+/* ── 10. 容器层级（确保特效canvas穿透点击）─────── */
+.container {
+    position: relative;
+    z-index: 10;
+}
